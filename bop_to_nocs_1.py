@@ -12,11 +12,11 @@ import shutil
 import pickle
 from plyfile import PlyData
 
-"""Step 1: 生成NOCS map"""
-"生成NOCS model"
-fuze_trimesh = trimesh.load('C:/Users/24762/Desktop/bop/obj_000000.ply') #导入模型文件
+"""Step 1: Generate NOCS map"""
+"Generate NOCS model"
+fuze_trimesh = trimesh.load('./bop/obj_000000.ply') # import your model file
 # 更新fuze_trimesh
-# 遍历物体的所有顶点
+# Go through all the vertices of the object
 for i in range(len(fuze_trimesh.vertices)):
     # 将顶点坐标归一化到[-0.5, 0.5]的范围内
     normalized_vertex = (fuze_trimesh.vertices[i] - fuze_trimesh.bounds[0]) / (
@@ -35,7 +35,7 @@ for i in range(len(fuze_trimesh.vertices)):
     fuze_trimesh.visual.vertex_colors[i] = new_color
 
 # 保存新的model为new_model.ply
-fuze_trimesh.export('C:/Users/24762/Desktop/bop/obj_000000_nocs.ply')  # 保存NOCS_model
+fuze_trimesh.export('./bop/obj_000000_nocs.ply')  # 保存NOCS_model
 
 # mesh = pyrender.Mesh.from_trimesh(trimesh.load('./new_model.ply'))
 mesh = pyrender.Mesh.from_trimesh(trimesh.load(fuze_trimesh))
@@ -43,21 +43,21 @@ scene = pyrender.Scene()
 scene.add(mesh)
 pyrender.Viewer(scene, use_raymond_lighting=True)
 
-"生成NOCS map"
-# 加载物体模型
-mesh = trimesh.load('C:/Users/24762/Desktop/bop/obj_000000_nocs.ply')
+"Generate NOCS map"
+
+mesh = trimesh.load('./bop/obj_000000_nocs.ply')
 mesh = pyrender.Mesh.from_trimesh(mesh)
 
 # R,T和相机参数
-gt_json_path = 'C:/Users/24762/Desktop/bop/scene_gt.json'
-camera_json_path = 'C:/Users/24762/Desktop/bop/scene_camera.json'
+gt_json_path = './bop/scene_gt.json'
+camera_json_path = './bop/scene_camera.json'
 with open(camera_json_path, 'r') as f:
     scene_camera = json.load(f)
 with open(gt_json_path, 'r') as f:
     scene_gt = json.load(f)
 
 # 获得所有的color图片
-rgb_images = glob.glob('C:/Users/24762/Desktop/bop/rgb/*.jpg')
+rgb_images = glob.glob('./bop/rgb/*.jpg')
 
 for rgb_image in rgb_images:
     image_id = osp.splitext(osp.basename(rgb_image))[0]
@@ -103,13 +103,13 @@ for rgb_image in rgb_images:
     rgb, depth = render_engine.render(scene, pyrender.constants.RenderFlags.RGBA)
     rgb = Image.fromarray(np.uint8(rgb))
     filename =image_id+'_coord'
-    rgb.save(f'C:/Users/24762/Desktop/bop/nocs_map/{filename}.png')  #保存为imgae_id + _coord.png 的形式
+    rgb.save(f'./bop/nocs_map/{filename}.png')  #保存为imgae_id + _coord.png 的形式
 
 
 
 """Step 2: mask翻转 """
-mask_input_dir = 'C:/Users/24762/Desktop/bop/mask'
-mask_output_dir = 'C:/Users/24762/Desktop/bop/mask_inverted'
+mask_input_dir = './bop/mask'
+mask_output_dir = './bop/mask_inverted'
 if not os.path.exists(mask_output_dir):
     os.makedirs(mask_output_dir)
 
@@ -126,7 +126,7 @@ for filename in os.listdir(mask_input_dir):
         output_img_path = os.path.join(mask_output_dir, filename)
         cv2.imwrite(output_img_path, img)
 # 重新命名mask图片
-mask_images =glob.glob('C:/Users/24762/Desktop/bop/mask_inverted/*.png')
+mask_images =glob.glob('./bop/mask_inverted/*.png')
 for mask_image in mask_images:
     # Get the base name of the image (e.g., '000001_000000.png')
     base_name = os.path.basename(mask_image)
@@ -142,11 +142,11 @@ for mask_image in mask_images:
 
 
 """Step 3: 生成meta.txt文件"""
-meta_dir ='C:/Users/24762/Desktop/bop/meta/'
+meta_dir ='./bop/meta/'
 if not os.path.exists(meta_dir):
     os.makedirs(meta_dir)
 
-rgb_path ='C:/Users/24762/Desktop/bop/rgb/'
+rgb_path ='./bop/rgb/'
 i=0
 filelist = os.listdir(rgb_path)
 for file in filelist:
@@ -160,11 +160,11 @@ for file in filelist:
 """Step 4: 修改为NOCS 格式"""
 
 # 创建新的NOCS文件夹(将文件保存到nocs文件夹中）
-NOCS_path = 'C:/Users/24762/Desktop/bop/NOCS/scene_1/'
+NOCS_path = './bop/NOCS/scene_1/'
 if not os.path.exists(NOCS_path):
     os.makedirs(NOCS_path)
 # 将depth保存到nocs文件夹中
-depth_path = 'C:/Users/24762/Desktop/bop/depth_nerf/'
+depth_path = './bop/depth_nerf/'
 filelist = os.listdir(depth_path)
 for i , file in enumerate(filelist):
     im = PIL.Image.open(depth_path+filelist[i])
@@ -181,7 +181,7 @@ for i, file in enumerate(filelist):
     im.save(save_path)
 
 # 将mask_inverted,meta,nocs_map中的文件复制到NOCS路径下
-source_path ={'C:/Users/24762/Desktop/bop/mask_inverted','C:/Users/24762/Desktop/bop/meta','C:/Users/24762/Desktop/bop/nocs_map'}
+source_path ={'./bop/mask_inverted','./bop/meta','./bop/nocs_map'}
 for dir_path in source_path:
     # 获取源文件夹中的所有文件
     filelist = os.listdir(dir_path)
@@ -197,7 +197,7 @@ for dir_path in source_path:
 
 """Step 5: 生成gt_pkl文件（针对验证集）"""
 
-output_gt_dir = 'C:/Users/24762/Desktop/bop/gt'
+output_gt_dir = './bop/gt'
 
 if not os.path.exists(output_gt_dir):
     os.makedirs(output_gt_dir)
@@ -253,8 +253,8 @@ for idx, old_id in enumerate(sorted_file_ids):
 print(f"Files in {NOCS_path} have been renamed.")
 
 """Step 6: 获得obj_model中的bbox.txt"""
-plyfile = 'C:/Users/24762/Desktop/bop/obj_000000.ply'
-obj_models = 'C:/Users/24762/Desktop/bop/NOCS/obj_models'
+plyfile = './bop/obj_000000.ply'
+obj_models = './bop/NOCS/obj_models'
 if not os.path.exists(obj_models):
     os.makedirs(obj_models)
 
